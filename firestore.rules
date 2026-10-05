@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Admins helper
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.username is string && data.username.size() >= 3 && data.username.size() <= 32
+          && data.displayName is string && data.displayName.size() <= 64;
+      }
+
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(request.resource.data);
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin()) && isValidUser(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      function isValidOrder(data) {
+        return data.orderId is string && data.orderId.size() <= 32
+          && data.orderType in ['dine_in', 'takeaway', 'delivery']
+          && data.totalPrice is number && data.totalPrice >= 0
+          && data.status in ['received', 'preparing', 'ready', 'delivered'];
+      }
+
+      // Diners can read their own orders; admins can read all
+      allow get: if (isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin())) || resource.data.userId == 'guest';
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isValidId(orderId) && isValidOrder(request.resource.data);
+      allow update: if (isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin())) && isValidOrder(request.resource.data);
+      allow delete: if isAdmin();
+    }
+  }
+}

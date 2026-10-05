@@ -1,0 +1,7 @@
+{
+  "name": "Kok Sen Restaurant 國成菜館",
+  "description": "Official dining experience, interactive menu, takeaway self-pickup, and islandwide delivery for Kok Sen Restaurant 國成菜館, Singapore Michelin Bib Gourmand Heritage Zi Char.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

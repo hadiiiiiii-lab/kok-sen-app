@@ -1,0 +1,159 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User account profile for Kok Sen diners",
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string",
+          "description": "Unique username chosen by user",
+          "minLength": 3,
+          "maxLength": 32,
+          "pattern": "^[a-zA-Z0-9_]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Full display name of the customer",
+          "maxLength": 64
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of customer",
+          "maxLength": 128
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone number for SMS and delivery updates",
+          "maxLength": 20
+        },
+        "defaultAddress": {
+          "type": "string",
+          "description": "Saved delivery address in Singapore",
+          "maxLength": 256
+        },
+        "defaultPostalCode": {
+          "type": "string",
+          "description": "Saved 6-digit Singapore postal code",
+          "maxLength": 6
+        },
+        "role": {
+          "type": "string",
+          "description": "User role",
+          "enum": ["customer", "admin"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of account creation"
+        }
+      },
+      "required": ["username", "displayName"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Dining, takeaway or delivery order record",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "description": "Human readable order identifier e.g. #KS-1234",
+          "maxLength": 32
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of customer who created order or guest",
+          "maxLength": 128
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Name of diner or contact person",
+          "maxLength": 64
+        },
+        "customerPhone": {
+          "type": "string",
+          "description": "Contact phone number for delivery or pickup",
+          "maxLength": 20
+        },
+        "orderType": {
+          "type": "string",
+          "description": "Type of order: dine_in, takeaway, or delivery",
+          "enum": ["dine_in", "takeaway", "delivery"]
+        },
+        "tableNumber": {
+          "type": "string",
+          "description": "Table number for dine in orders",
+          "maxLength": 10
+        },
+        "deliveryAddress": {
+          "type": "string",
+          "description": "Street address, building, unit number in Singapore",
+          "maxLength": 256
+        },
+        "postalCode": {
+          "type": "string",
+          "description": "6-digit Singapore postal code",
+          "maxLength": 6
+        },
+        "distanceKm": {
+          "type": "number",
+          "description": "Estimated delivery distance from 4 Keong Saik Rd"
+        },
+        "deliveryZone": {
+          "type": "string",
+          "description": "Calculated delivery zone e.g. Zone 1, Zone 2, Zone 3",
+          "maxLength": 32
+        },
+        "deliveryFee": {
+          "type": "number",
+          "description": "Delivery fee in SGD"
+        },
+        "pickupTime": {
+          "type": "string",
+          "description": "Requested pickup time for takeaway",
+          "maxLength": 32
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "Food subtotal in SGD"
+        },
+        "totalPrice": {
+          "type": "number",
+          "description": "Total amount in SGD including delivery"
+        },
+        "status": {
+          "type": "string",
+          "description": "Current order lifecycle status",
+          "enum": ["received", "preparing", "ready", "delivered"]
+        },
+        "estimatedMinutes": {
+          "type": "number",
+          "description": "Estimated cooking or delivery ETA in minutes"
+        },
+        "specialInstructions": {
+          "type": "string",
+          "description": "Dietary requests or delivery instructions",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Server timestamp of order placement"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Server timestamp of order update"
+        }
+      },
+      "required": ["orderId", "orderType", "totalPrice", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Diner account profiles and saved preferences"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Orders placed for Dine-In, Takeaway, and Delivery"
+    }
+  }
+}
