@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#C61E28"/>
+  <circle cx="256" cy="256" r="210" fill="#9E121B" stroke="#F59E0B" stroke-width="6"/>
+  <!-- Decorative Heritage Border Ring -->
+  <circle cx="256" cy="256" r="190" fill="none" stroke="#FBBF24" stroke-dasharray="8 12" stroke-width="3" opacity="0.6"/>
+  <!-- Michelin Star Accent -->
+  <g transform="translate(256, 120) scale(0.9)">
+    <polygon points="0,-24 7,-7 24,0 7,7 0,24 -7,7 -24,0 -7,-7" fill="#FBBF24"/>
+  </g>
+  <!-- Kok Sen Zi Char Wok & Flames -->
+  <path d="M210 240 C190 200, 210 160, 230 145 C235 170, 250 180, 256 160 C270 190, 290 195, 305 170 C310 205, 290 235, 256 245 C235 240, 220 250, 210 240 Z" fill="#F59E0B"/>
+  <path d="M235 235 C225 210, 235 185, 248 175 C252 190, 260 195, 264 185 C272 205, 280 205, 288 190 C290 212, 278 230, 256 235 Z" fill="#FEF08A"/>
+  <!-- Traditional Chinese Wok Bowl -->
+  <path d="M120 260 C120 350, 392 350, 392 260 L410 260 C416 260, 420 255, 418 249 L412 235 C410 230, 404 227, 398 229 L380 235 C350 225, 162 225, 132 235 L114 229 C108 227, 102 230, 100 235 L94 249 C92 255, 96 260, 102 260 Z" fill="#FFFFFF"/>
+  <ellipse cx="256" cy="255" rx="125" ry="18" fill="#F3F4F6"/>
+  <!-- Chinese Calligraphy Text '國成' -->
+  <text x="256" y="388" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="52" fill="#FFFFFF" text-anchor="middle" letter-spacing="4">國成菜館</text>
+  <text x="256" y="425" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="24" fill="#FBBF24" text-anchor="middle" letter-spacing="5">KOK SEN</text>
+  <text x="256" y="450" font-family="'Plus Jakarta Sans', sans-serif" font-weight="700" font-size="14" fill="#FDE68A" text-anchor="middle" letter-spacing="3">SINGAPORE • EST. 1968</text>
+</svg>

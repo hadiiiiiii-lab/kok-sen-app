@@ -20,6 +20,7 @@ import { GeminiChatFloatingButton } from './components/GeminiChatFloatingButton'
 import { MobileDeviceFrame } from './components/MobileDeviceFrame';
 import { QRTableScannerModal } from './components/QRTableScannerModal';
 import { ReactNativeExportModal } from './components/ReactNativeExportModal';
+import { DeployMobileModal } from './components/DeployMobileModal';
 import { NativePushNotification, PushNotificationPayload } from './components/NativePushNotification';
 import { playNativeSound, triggerHaptic } from './utils/nativeSensors';
 
@@ -46,6 +47,7 @@ function AppContent() {
   // Mobile Native Features State
   const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
   const [isReactNativeExportOpen, setIsReactNativeExportOpen] = useState(false);
+  const [isDeployMobileOpen, setIsDeployMobileOpen] = useState(false);
   const [activeNotification, setActiveNotification] = useState<PushNotificationPayload | null>(null);
 
   // Past Orders history
@@ -339,6 +341,7 @@ function AppContent() {
       onOpenOrder={() => setActiveTab('history')}
       onOpenQRScanner={() => setIsQRScannerOpen(true)}
       onOpenReactNativeExport={() => setIsReactNativeExportOpen(true)}
+      onOpenDeployMobile={() => setIsDeployMobileOpen(true)}
       tableNumber={tableNumber}
     >
       <div className="flex-1 flex flex-col bg-[#FAF9F7] text-[#1F2937] relative min-h-full">
@@ -355,6 +358,7 @@ function AppContent() {
           onTabChange={handleTabChange}
           onOpenChat={() => handleOpenChat()}
           onOpenQRScanner={() => setIsQRScannerOpen(true)}
+          onOpenDeployMobile={() => setIsDeployMobileOpen(true)}
           tableNumber={tableNumber}
         />
 
@@ -367,6 +371,7 @@ function AppContent() {
               onOpenChat={handleOpenChat}
               onOpenQRScanner={() => setIsQRScannerOpen(true)}
               onOpenReactNativeExport={() => setIsReactNativeExportOpen(true)}
+              onOpenDeployMobile={() => setIsDeployMobileOpen(true)}
             />
           )}
           {activeTab === 'menu' && (
@@ -445,6 +450,12 @@ function AppContent() {
         <ReactNativeExportModal
           isOpen={isReactNativeExportOpen}
           onClose={() => setIsReactNativeExportOpen(false)}
+        />
+
+        {/* Deploy to Actual Mobile Phone Modal */}
+        <DeployMobileModal
+          isOpen={isDeployMobileOpen}
+          onClose={() => setIsDeployMobileOpen(false)}
         />
 
         {/* Mobile Bottom Navigation */}

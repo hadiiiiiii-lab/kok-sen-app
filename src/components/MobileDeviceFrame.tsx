@@ -24,6 +24,7 @@ interface MobileDeviceFrameProps {
   onOpenOrder?: (order: PlacedOrder) => void;
   onOpenQRScanner?: () => void;
   onOpenReactNativeExport?: () => void;
+  onOpenDeployMobile?: () => void;
   tableNumber: string;
 }
 
@@ -33,6 +34,7 @@ export const MobileDeviceFrame: React.FC<MobileDeviceFrameProps> = ({
   onOpenOrder,
   onOpenQRScanner,
   onOpenReactNativeExport,
+  onOpenDeployMobile,
   tableNumber,
 }) => {
   const [deviceMode, setDeviceMode] = useState<DeviceMode>('iphone');
@@ -145,11 +147,26 @@ export const MobileDeviceFrame: React.FC<MobileDeviceFrameProps> = ({
                 playNativeSound('tap');
                 onOpenReactNativeExport();
               }}
-              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-red-600 to-[#C61E28] hover:from-red-700 hover:to-[#A00016] text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+              className="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-bold flex items-center gap-1.5 transition border border-neutral-700 shadow-sm cursor-pointer"
               title="View & Export React Native Code"
             >
               <Code2 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">React Native</span> Code
+            </button>
+          )}
+
+          {onOpenDeployMobile && (
+            <button
+              onClick={() => {
+                triggerHaptic('medium');
+                playNativeSound('pop');
+                onOpenDeployMobile();
+              }}
+              className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+              title="Deploy to Actual Phone (iOS / Android)"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-white" />
+              <span className="hidden xs:inline">Deploy to</span> Phone
             </button>
           )}
         </div>

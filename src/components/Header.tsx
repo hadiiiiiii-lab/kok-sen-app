@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { MessageCircle, ShoppingBag, User, LogIn, Sparkles, QrCode } from 'lucide-react';
+import { MessageCircle, ShoppingBag, User, LogIn, Sparkles, QrCode, Smartphone } from 'lucide-react';
 import { RESTAURANT_INFO } from '../data/dishes';
 import { ActiveTab } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { AuthModal } from './AuthModal';
 import { UserProfileModal } from './UserProfileModal';
+import { PWAInstallButton } from './PWAInstallButton';
 import { playNativeSound, triggerHaptic } from '../utils/nativeSensors';
 
 interface HeaderProps {
@@ -13,6 +14,7 @@ interface HeaderProps {
   onTabChange: (tab: ActiveTab) => void;
   onOpenChat?: () => void;
   onOpenQRScanner?: () => void;
+  onOpenDeployMobile?: () => void;
   tableNumber?: string;
 }
 
@@ -22,6 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
   onTabChange,
   onOpenChat,
   onOpenQRScanner,
+  onOpenDeployMobile,
   tableNumber,
 }) => {
   const { currentUser, userProfile } = useAuth();
@@ -69,6 +72,25 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Quick Actions: Table QR, Gemini AI, User & Cart */}
           <div className="flex items-center gap-1">
+            {/* Direct PWA Install Button */}
+            <PWAInstallButton variant="header" />
+
+            {/* Deploy to Phone Button if on desktop / frame */}
+            {onOpenDeployMobile && (
+              <button
+                onClick={() => {
+                  triggerHaptic('medium');
+                  playNativeSound('pop');
+                  onOpenDeployMobile();
+                }}
+                className="flex items-center gap-1 px-1.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors border border-emerald-200/80 active:scale-95 cursor-pointer text-[10.5px] font-bold"
+                title="Deploy to Phone / Open Mobile QR"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="hidden sm:inline">Phone</span>
+              </button>
+            )}
+
             {/* Table QR Scanner Trigger */}
             {onOpenQRScanner && (
               <button

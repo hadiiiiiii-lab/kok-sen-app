@@ -20,6 +20,7 @@ import { DISHES, RESTAURANT_INFO } from '../data/dishes';
 import { ActiveTab, Dish } from '../types';
 import { getSingaporeRestaurantStatus } from '../utils/singaporeTime';
 import { playNativeSound, triggerHaptic } from '../utils/nativeSensors';
+import { PWAInstallButton } from './PWAInstallButton';
 
 interface HomeViewProps {
   onTabChange: (tab: ActiveTab) => void;
@@ -27,6 +28,7 @@ interface HomeViewProps {
   onOpenChat?: (prompt?: string) => void;
   onOpenQRScanner?: () => void;
   onOpenReactNativeExport?: () => void;
+  onOpenDeployMobile?: () => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({
@@ -35,6 +37,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
   onOpenChat,
   onOpenQRScanner,
   onOpenReactNativeExport,
+  onOpenDeployMobile,
 }) => {
   const signatureDishes = DISHES.filter((d) => d.badge);
   const [sgtStatus, setSgtStatus] = useState(() => getSingaporeRestaurantStatus());
@@ -200,8 +203,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
         </a>
       </div>
 
-      {/* Mobile Native Experience Strip: Table QR & React Native Core */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Mobile Native Experience Strip: Table QR, React Native Core & Deploy to Phone */}
+      <div className="grid grid-cols-3 gap-2">
         {onOpenQRScanner && (
           <button
             onClick={() => {
@@ -209,16 +212,16 @@ export const HomeView: React.FC<HomeViewProps> = ({
               playNativeSound('tap');
               onOpenQRScanner();
             }}
-            className="flex items-center gap-2 p-2.5 rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-800 text-white shadow-xs hover:from-neutral-800 hover:to-neutral-700 active:scale-95 transition-all text-left cursor-pointer border border-neutral-700/60"
+            className="flex flex-col items-start justify-between p-2.5 rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-800 text-white shadow-xs hover:from-neutral-800 hover:to-neutral-700 active:scale-95 transition-all text-left cursor-pointer border border-neutral-700/60"
           >
-            <div className="w-8 h-8 rounded-lg bg-red-600/30 text-red-400 flex items-center justify-center shrink-0">
-              <QrCode className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-lg bg-red-600/30 text-red-400 flex items-center justify-center shrink-0 mb-1">
+              <QrCode className="w-3.5 h-3.5" />
             </div>
-            <div className="min-w-0">
-              <div className="text-[11px] font-bold text-neutral-100 flex items-center gap-1">
-                Scan Table QR
+            <div>
+              <div className="text-[11px] font-bold text-neutral-100 leading-tight">
+                Table QR
               </div>
-              <p className="text-[9.5px] text-neutral-400 truncate">Dine-In Camera Scanner</p>
+              <p className="text-[9px] text-neutral-400">Scan Camera</p>
             </div>
           </button>
         )}
@@ -230,21 +233,45 @@ export const HomeView: React.FC<HomeViewProps> = ({
               playNativeSound('pop');
               onOpenReactNativeExport();
             }}
-            className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-gray-200/90 hover:border-red-300 text-gray-900 shadow-xs active:scale-95 transition-all text-left cursor-pointer"
+            className="flex flex-col items-start justify-between p-2.5 rounded-xl bg-white border border-gray-200/90 hover:border-red-300 text-gray-900 shadow-xs active:scale-95 transition-all text-left cursor-pointer"
           >
-            <div className="w-8 h-8 rounded-lg bg-red-50 text-[#C61E28] flex items-center justify-center shrink-0">
-              <Smartphone className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-lg bg-red-50 text-[#C61E28] flex items-center justify-center shrink-0 mb-1">
+              <Smartphone className="w-3.5 h-3.5" />
             </div>
-            <div className="min-w-0">
-              <div className="text-[11px] font-bold text-gray-900 flex items-center gap-1">
-                React Native
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <div>
+              <div className="text-[11px] font-bold text-gray-900 leading-tight flex items-center gap-1">
+                Expo Code
               </div>
-              <p className="text-[9.5px] text-gray-500 truncate">Expo Mobile Code</p>
+              <p className="text-[9px] text-gray-500">React Native</p>
+            </div>
+          </button>
+        )}
+
+        {onOpenDeployMobile && (
+          <button
+            onClick={() => {
+              triggerHaptic('medium');
+              playNativeSound('pop');
+              onOpenDeployMobile();
+            }}
+            className="flex flex-col items-start justify-between p-2.5 rounded-xl bg-gradient-to-br from-emerald-950 to-neutral-900 border border-emerald-600/30 text-white shadow-xs hover:border-emerald-500 active:scale-95 transition-all text-left cursor-pointer"
+          >
+            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mb-1">
+              <Smartphone className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <div className="text-[11px] font-bold text-emerald-300 leading-tight flex items-center gap-1">
+                To Phone
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+              <p className="text-[9px] text-emerald-400/80">iOS & Android</p>
             </div>
           </button>
         )}
       </div>
+
+      {/* PWA In-App Install Banner if eligible */}
+      <PWAInstallButton variant="banner" />
 
       {/* Keong Saik Delivery & Takeaway Feature Banner */}
       <div
