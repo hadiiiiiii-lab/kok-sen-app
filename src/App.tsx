@@ -13,10 +13,15 @@ import { getInitialPastOrders } from './data/pastOrders';
 import { ActiveTab, Dish, PlacedOrder, DiningMode, DeliveryDetails, TakeawayDetails } from './types';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { db } from './firebase';
-import { doc, setDoc, onSnapshot, collection, query, where, orderBy } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
 import { AuthModal } from './components/AuthModal';
 import { GeminiChatModal } from './components/GeminiChatModal';
 import { GeminiChatFloatingButton } from './components/GeminiChatFloatingButton';
+import { MobileDeviceFrame } from './components/MobileDeviceFrame';
+import { QRTableScannerModal } from './components/QRTableScannerModal';
+import { ReactNativeExportModal } from './components/ReactNativeExportModal';
+import { NativePushNotification, PushNotificationPayload } from './components/NativePushNotification';
+import { playNativeSound, triggerHaptic } from './utils/nativeSensors';
 
 function AppContent() {
   const { currentUser, userProfile } = useAuth();
@@ -37,6 +42,11 @@ function AppContent() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatInitialPrompt, setChatInitialPrompt] = useState<string | undefined>(undefined);
   const [tableNumber, setTableNumber] = useState('04');
+
+  // Mobile Native Features State
+  const [isQRScannerOpen, setIsQRScannerOpen] = useState(false);
+  const [isReactNativeExportOpen, setIsReactNativeExportOpen] = useState(false);
+  const [activeNotification, setActiveNotification] = useState<PushNotificationPayload | null>(null);
 
   // Past Orders history
   const [pastOrders, setPastOrders] = useState<PlacedOrder[]>(() => {
@@ -59,6 +69,11 @@ function AppContent() {
     }
     return getInitialPastOrders();
   });
+
+  // Active Order for Dynamic Island Live Activity
+  const activeOrder = useMemo(() => {
+    return pastOrders.find((o) => o.status === 'received' || o.status === 'preparing' || o.status === 'ready');
+  }, [pastOrders]);
 
   // Listen to Firestore orders when user is logged in
   useEffect(() => {
@@ -84,24 +99,26 @@ function AppContent() {
             subtotal: data.subtotal || data.totalPrice || 0,
             deliveryFee: data.deliveryFee || 0,
             totalPrice: data.totalPrice || 0,
-            estimatedMinutes: data.estimatedMinutes || 25,
+            estimatedMinutes: data.estimatedMinutes || 20,
             deliveryDetails: data.deliveryAddress
               ? {
-                  recipientName: data.customerName || 'Diner',
-                  recipientPhone: data.customerPhone || '',
                   address: data.deliveryAddress,
                   postalCode: data.postalCode || '',
                   distanceKm: data.distanceKm || 0,
-                  deliveryZone: data.deliveryZone || 'Zone 1',
+                  deliveryZone: data.deliveryZone || '',
                   deliveryFee: data.deliveryFee || 0,
-                  isFreeDelivery: data.deliveryFee === 0,
+                  isFreeDelivery: Boolean(data.deliveryFee === 0),
+                  recipientName: data.customerName || '',
+                  recipientPhone: data.customerPhone || '',
+                  specialInstructions: data.specialInstructions || '',
                 }
               : undefined,
             takeawayDetails: data.pickupTime
               ? {
-                  pickupName: data.customerName || 'Diner',
-                  pickupPhone: data.customerPhone || '',
                   pickupTimeSlot: data.pickupTime,
+                  pickupName: data.customerName || '',
+                  pickupPhone: data.customerPhone || '',
+                  needCutlery: true,
                 }
               : undefined,
           });
@@ -109,64 +126,72 @@ function AppContent() {
 
         if (remoteOrders.length > 0) {
           setPastOrders((prev) => {
-            const remoteMap = new Map(remoteOrders.map((o) => [o.orderId, o]));
             const combined = [...remoteOrders];
-            prev.forEach((local) => {
-              if (!remoteMap.has(local.orderId)) {
-                combined.push(local);
+            for (const p of prev) {
+              if (!combined.some((r) => r.orderId === p.orderId)) {
+                combined.push(p);
               }
-            });
-            // Sort newest first
+            }
             return combined.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
           });
         }
-      }, (error) => {
-        console.warn('Firestore snapshot notice:', error.message);
       });
 
       return () => unsubscribe();
-    } catch (e) {
-      console.warn('Could not attach Firestore listener:', e);
+    } catch (err) {
+      console.warn('Firestore orders sync listener not active:', err);
     }
   }, [currentUser]);
 
-  // Persist cart changes
+  // Persist cart to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('koksen_cart_v2', JSON.stringify(cart));
-    } catch {}
+    } catch {
+      // Ignore
+    }
   }, [cart]);
 
-  // Persist order history changes
+  // Persist pastOrders to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('koksen_orders_history_v2', JSON.stringify(pastOrders));
-    } catch {}
+    } catch {
+      // Ignore
+    }
   }, [pastOrders]);
 
-  // Calculate cart counts and totals
-  const { totalItems, totalPrice } = useMemo(() => {
-    let count = 0;
-    let sum = 0;
-    for (const [dishIdStr, qty] of Object.entries(cart)) {
+  // Total count of items in cart
+  const totalItems = useMemo(() => {
+    return Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+  }, [cart]);
+
+  // Total price of items in cart
+  const totalPrice = useMemo(() => {
+    return Object.entries(cart).reduce((sum, [dishIdStr, qty]) => {
       const dish = DISHES.find((d) => d.id === Number(dishIdStr));
-      if (dish && qty > 0) {
-        count += qty;
-        sum += dish.price * qty;
-      }
-    }
-    return { totalItems: count, totalPrice: sum };
+      return sum + (dish ? dish.price * qty : 0);
+    }, 0);
   }, [cart]);
 
   const handleUpdateQty = (dishId: number, delta: number) => {
+    triggerHaptic('light');
+    playNativeSound('tap');
     setCart((prev) => {
       const current = prev[dishId] || 0;
-      const next = Math.max(0, current + delta);
+      const next = current + delta;
+      if (next <= 0) {
+        const copy = { ...prev };
+        delete copy[dishId];
+        return copy;
+      }
       return { ...prev, [dishId]: next };
     });
   };
 
   const handleAddToCart = (dish: Dish) => {
+    triggerHaptic('medium');
+    playNativeSound('tap');
     handleUpdateQty(dish.id, 1);
   };
 
@@ -177,7 +202,7 @@ function AppContent() {
 
   // Place order handler
   const handlePlaceOrder = async (
-    items: { dish: Dish; qty: number; subtotal: number }[],
+    items: { dish: Dish; qty: number }[],
     table: string,
     total: number,
     orderType: DiningMode = 'dine_in',
@@ -185,18 +210,18 @@ function AppContent() {
     takeawayDetails?: TakeawayDetails
   ) => {
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-    const orderPrefix = orderType === 'delivery' ? 'DL' : orderType === 'takeaway' ? 'TK' : 'KS';
-    const orderId = `#${orderPrefix}-${randomSuffix}`;
-    const subtotal = items.reduce((sum, it) => sum + it.subtotal, 0);
+    const orderId = `KS-${randomSuffix}`;
+    const subtotal = items.reduce((acc, it) => acc + it.dish.price * it.qty, 0);
 
     const newOrder: PlacedOrder = {
       orderId,
-      userId: currentUser?.uid || 'guest',
+      userId: currentUser?.uid,
       customerName:
         deliveryDetails?.recipientName ||
         takeawayDetails?.pickupName ||
         userProfile?.displayName ||
-        'Kok Sen Diner',
+        currentUser?.displayName ||
+        'Kok Sen Guest',
       customerPhone:
         deliveryDetails?.recipientPhone ||
         takeawayDetails?.pickupPhone ||
@@ -255,7 +280,26 @@ function AppContent() {
     // 3. Register in local Orders list
     setPastOrders((prev) => [newOrder, ...prev.filter((o) => o.orderId !== newOrder.orderId)]);
 
-    // 4. Close cart modal & navigate to Orders view
+    // 4. Native Sound, Haptic & Push Notification
+    playNativeSound('order');
+    triggerHaptic('success');
+
+    setActiveNotification({
+      id: Date.now().toString(),
+      title: `Order #${orderId} Confirmed!`,
+      body:
+        orderType === 'delivery'
+          ? `Dispatched for delivery to ${deliveryDetails?.postalCode || 'your address'}. Est: 45m.`
+          : orderType === 'takeaway'
+          ? `Kitchen is preparing your pickup for ${takeawayDetails?.pickupTimeSlot || 'soon'}. Est: 25m.`
+          : `Wok chef is firing your dishes for Table ${newOrder.tableNumber}. Est: 15m.`,
+      time: 'Just now',
+      onPress: () => {
+        setActiveTab('history');
+      },
+    });
+
+    // 5. Close cart modal & navigate to Orders view
     setIsCartOpen(false);
     setActiveTab('history');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -263,6 +307,8 @@ function AppContent() {
 
   // Re-order handler
   const handleOrderAgain = (pastOrder: PlacedOrder) => {
+    triggerHaptic('medium');
+    playNativeSound('tap');
     setCart((prev) => {
       const updated = { ...prev };
       for (const item of pastOrder.items) {
@@ -277,95 +323,139 @@ function AppContent() {
     setIsChatOpen(true);
   };
 
+  const handleTableScanned = (scannedTable: string) => {
+    setTableNumber(scannedTable);
+    setActiveNotification({
+      id: Date.now().toString(),
+      title: 'Table Connected!',
+      body: `Table ${scannedTable} verified. Orders and service requests will be delivered here.`,
+      time: 'Just now',
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-[#FAF9F7] text-[#1F2937] pb-36 selection:bg-[#C61E28] selection:text-white relative">
-      {/* Top Header */}
-      <Header
-        cartCount={totalItems}
-        onOpenCart={() => setIsCartOpen(true)}
-        onTabChange={handleTabChange}
-        onOpenChat={() => handleOpenChat()}
-      />
+    <MobileDeviceFrame
+      activeOrder={activeOrder}
+      onOpenOrder={() => setActiveTab('history')}
+      onOpenQRScanner={() => setIsQRScannerOpen(true)}
+      onOpenReactNativeExport={() => setIsReactNativeExportOpen(true)}
+      tableNumber={tableNumber}
+    >
+      <div className="flex-1 flex flex-col bg-[#FAF9F7] text-[#1F2937] relative min-h-full">
+        {/* Native Push Notification Toast */}
+        <NativePushNotification
+          notification={activeNotification}
+          onDismiss={() => setActiveNotification(null)}
+        />
 
-      {/* Main View Container */}
-      <main className="w-full">
-        {activeTab === 'home' && (
-          <HomeView
-            onTabChange={handleTabChange}
-            onAddToCart={handleAddToCart}
-            onOpenChat={handleOpenChat}
-          />
-        )}
-        {activeTab === 'menu' && (
-          <MenuView
-            cart={cart}
-            onUpdateQty={handleUpdateQty}
-            tableNumber={tableNumber}
-            onTableNumberChange={setTableNumber}
-          />
-        )}
-        {activeTab === 'delivery' && (
-          <DeliveryAnalysisView
-            onTabChange={handleTabChange}
-            onOpenCart={() => setIsCartOpen(true)}
-            cartCount={totalItems}
-          />
-        )}
-        {(activeTab === 'history' || activeTab === 'status') && (
-          <OrderHistoryView
-            pastOrders={pastOrders}
-            onOrderAgain={handleOrderAgain}
-            onTabChange={handleTabChange}
-            onOpenCart={() => setIsCartOpen(true)}
-          />
-        )}
-        {activeTab === 'bookings' && <BookingsView />}
-      </main>
+        {/* Top Header */}
+        <Header
+          cartCount={totalItems}
+          onOpenCart={() => setIsCartOpen(true)}
+          onTabChange={handleTabChange}
+          onOpenChat={() => handleOpenChat()}
+          onOpenQRScanner={() => setIsQRScannerOpen(true)}
+          tableNumber={tableNumber}
+        />
 
-      {/* Floating Gemini AI Concierge Trigger Button */}
-      <GeminiChatFloatingButton onClick={() => handleOpenChat()} />
+        {/* Main View Container */}
+        <main className="w-full flex-1 pb-20">
+          {activeTab === 'home' && (
+            <HomeView
+              onTabChange={handleTabChange}
+              onAddToCart={handleAddToCart}
+              onOpenChat={handleOpenChat}
+              onOpenQRScanner={() => setIsQRScannerOpen(true)}
+              onOpenReactNativeExport={() => setIsReactNativeExportOpen(true)}
+            />
+          )}
+          {activeTab === 'menu' && (
+            <MenuView
+              cart={cart}
+              onUpdateQty={handleUpdateQty}
+              tableNumber={tableNumber}
+              onTableNumberChange={setTableNumber}
+            />
+          )}
+          {activeTab === 'delivery' && (
+            <DeliveryAnalysisView
+              onTabChange={handleTabChange}
+              onOpenCart={() => setIsCartOpen(true)}
+              cartCount={totalItems}
+            />
+          )}
+          {(activeTab === 'history' || activeTab === 'status') && (
+            <OrderHistoryView
+              pastOrders={pastOrders}
+              onOrderAgain={handleOrderAgain}
+              onTabChange={handleTabChange}
+              onOpenCart={() => setIsCartOpen(true)}
+            />
+          )}
+          {activeTab === 'bookings' && <BookingsView />}
+        </main>
 
-      {/* Sticky Order Bar */}
-      <StickyOrderBar
-        itemCount={totalItems}
-        totalPrice={totalPrice}
-        onOpenCart={() => setIsCartOpen(true)}
-        isVisible={totalItems > 0}
-      />
+        {/* Floating Gemini AI Concierge Trigger Button */}
+        <GeminiChatFloatingButton onClick={() => handleOpenChat()} />
 
-      {/* Cart & Order Review Modal */}
-      <CartModal
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        cart={cart}
-        onUpdateQty={handleUpdateQty}
-        tableNumber={tableNumber}
-        onPlaceOrder={handlePlaceOrder}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
-      />
+        {/* Sticky Order Bar */}
+        <StickyOrderBar
+          itemCount={totalItems}
+          totalPrice={totalPrice}
+          onOpenCart={() => setIsCartOpen(true)}
+          isVisible={totalItems > 0}
+        />
 
-      {/* Global Auth Modal */}
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
+        {/* Cart & Order Review Modal */}
+        <CartModal
+          isOpen={isCartOpen}
+          onClose={() => setIsCartOpen(false)}
+          cart={cart}
+          onUpdateQty={handleUpdateQty}
+          tableNumber={tableNumber}
+          onPlaceOrder={handlePlaceOrder}
+          onOpenAuth={() => setIsAuthModalOpen(true)}
+        />
 
-      {/* Gemini Chatbot Modal */}
-      <GeminiChatModal
-        isOpen={isChatOpen}
-        onClose={() => {
-          setIsChatOpen(false);
-          setChatInitialPrompt(undefined);
-        }}
-        initialPrompt={chatInitialPrompt}
-      />
+        {/* Global Auth Modal */}
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+        />
 
-      {/* Mobile Bottom Navigation */}
-      <BottomNav
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
-    </div>
+        {/* Gemini Chatbot Modal */}
+        <GeminiChatModal
+          isOpen={isChatOpen}
+          onClose={() => {
+            setIsChatOpen(false);
+            setChatInitialPrompt(undefined);
+          }}
+          initialPrompt={chatInitialPrompt}
+        />
+
+        {/* Table QR Scanner Modal */}
+        <QRTableScannerModal
+          isOpen={isQRScannerOpen}
+          onClose={() => setIsQRScannerOpen(false)}
+          onTableScanned={handleTableScanned}
+          currentTable={tableNumber}
+        />
+
+        {/* React Native & Expo Code Exporter Modal */}
+        <ReactNativeExportModal
+          isOpen={isReactNativeExportOpen}
+          onClose={() => setIsReactNativeExportOpen(false)}
+        />
+
+        {/* Mobile Bottom Navigation */}
+        <BottomNav
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          orderCount={pastOrders.length}
+          hasActiveOrder={!!activeOrder}
+        />
+      </div>
+    </MobileDeviceFrame>
   );
 }
 

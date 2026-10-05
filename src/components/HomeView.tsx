@@ -13,18 +13,29 @@ import {
   Receipt,
   Bike,
   Search,
+  QrCode,
+  Smartphone,
 } from 'lucide-react';
 import { DISHES, RESTAURANT_INFO } from '../data/dishes';
 import { ActiveTab, Dish } from '../types';
 import { getSingaporeRestaurantStatus } from '../utils/singaporeTime';
+import { playNativeSound, triggerHaptic } from '../utils/nativeSensors';
 
 interface HomeViewProps {
   onTabChange: (tab: ActiveTab) => void;
   onAddToCart: (dish: Dish) => void;
   onOpenChat?: (prompt?: string) => void;
+  onOpenQRScanner?: () => void;
+  onOpenReactNativeExport?: () => void;
 }
 
-export const HomeView: React.FC<HomeViewProps> = ({ onTabChange, onAddToCart, onOpenChat }) => {
+export const HomeView: React.FC<HomeViewProps> = ({
+  onTabChange,
+  onAddToCart,
+  onOpenChat,
+  onOpenQRScanner,
+  onOpenReactNativeExport,
+}) => {
   const signatureDishes = DISHES.filter((d) => d.badge);
   const [sgtStatus, setSgtStatus] = useState(() => getSingaporeRestaurantStatus());
 
@@ -123,7 +134,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ onTabChange, onAddToCart, on
       {/* Quick Action 4-Grid */}
       <div className="grid grid-cols-4 gap-2.5 pt-1">
         <button
-          onClick={() => onTabChange('menu')}
+          onClick={() => {
+            triggerHaptic('light');
+            playNativeSound('tap');
+            onTabChange('menu');
+          }}
           className="flex flex-col items-center justify-center p-3 rounded-xl bg-white border border-gray-200/80 shadow-xs hover:border-[#C61E28]/40 active:scale-95 transition-all cursor-pointer"
         >
           <div className="w-10 h-10 rounded-full bg-red-50 text-[#C61E28] flex items-center justify-center mb-1.5">
@@ -135,7 +150,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ onTabChange, onAddToCart, on
         </button>
 
         <button
-          onClick={() => onTabChange('delivery')}
+          onClick={() => {
+            triggerHaptic('light');
+            playNativeSound('tap');
+            onTabChange('delivery');
+          }}
           className="flex flex-col items-center justify-center p-3 rounded-xl bg-white border border-[#C61E28]/30 shadow-xs hover:border-[#C61E28] active:scale-95 transition-all cursor-pointer relative"
         >
           <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-1.5">
@@ -150,7 +169,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ onTabChange, onAddToCart, on
         </button>
 
         <button
-          onClick={() => onTabChange('bookings')}
+          onClick={() => {
+            triggerHaptic('light');
+            playNativeSound('tap');
+            onTabChange('bookings');
+          }}
           className="flex flex-col items-center justify-center p-3 rounded-xl bg-white border border-gray-200/80 shadow-xs hover:border-[#C61E28]/40 active:scale-95 transition-all cursor-pointer"
         >
           <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center mb-1.5">
@@ -165,6 +188,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onTabChange, onAddToCart, on
           href={`https://wa.me/${RESTAURANT_INFO.whatsappClean}?text=Hi%20Kok%20Sen,%20I%20would%20like%20to%20inquire%20about%20takeaway%20ordering.`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => triggerHaptic('light')}
           className="flex flex-col items-center justify-center p-3 rounded-xl bg-white border border-gray-200/80 shadow-xs hover:border-[#C61E28]/40 active:scale-95 transition-all cursor-pointer"
         >
           <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-1.5">
@@ -174,6 +198,52 @@ export const HomeView: React.FC<HomeViewProps> = ({ onTabChange, onAddToCart, on
             WhatsApp
           </span>
         </a>
+      </div>
+
+      {/* Mobile Native Experience Strip: Table QR & React Native Core */}
+      <div className="grid grid-cols-2 gap-2">
+        {onOpenQRScanner && (
+          <button
+            onClick={() => {
+              triggerHaptic('medium');
+              playNativeSound('tap');
+              onOpenQRScanner();
+            }}
+            className="flex items-center gap-2 p-2.5 rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-800 text-white shadow-xs hover:from-neutral-800 hover:to-neutral-700 active:scale-95 transition-all text-left cursor-pointer border border-neutral-700/60"
+          >
+            <div className="w-8 h-8 rounded-lg bg-red-600/30 text-red-400 flex items-center justify-center shrink-0">
+              <QrCode className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-bold text-neutral-100 flex items-center gap-1">
+                Scan Table QR
+              </div>
+              <p className="text-[9.5px] text-neutral-400 truncate">Dine-In Camera Scanner</p>
+            </div>
+          </button>
+        )}
+
+        {onOpenReactNativeExport && (
+          <button
+            onClick={() => {
+              triggerHaptic('medium');
+              playNativeSound('pop');
+              onOpenReactNativeExport();
+            }}
+            className="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-gray-200/90 hover:border-red-300 text-gray-900 shadow-xs active:scale-95 transition-all text-left cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-lg bg-red-50 text-[#C61E28] flex items-center justify-center shrink-0">
+              <Smartphone className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[11px] font-bold text-gray-900 flex items-center gap-1">
+                React Native
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              </div>
+              <p className="text-[9.5px] text-gray-500 truncate">Expo Mobile Code</p>
+            </div>
+          </button>
+        )}
       </div>
 
       {/* Keong Saik Delivery & Takeaway Feature Banner */}
