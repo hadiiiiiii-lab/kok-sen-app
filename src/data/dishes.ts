@@ -870,3 +870,5 @@ export const RESTAURANT_INFO = {
   michelinReview:
     'Unfussy, robust, and packing undeniable wok heat. Kok Sen\'s Big Prawn Hor Fun, Claypot Yong Tau Foo, and signature spicy prawn gravy define the epitome of Singapore zi char excellence.',
 };
+
+export const MENU_CATEGORIES = MENU_SECTIONS;

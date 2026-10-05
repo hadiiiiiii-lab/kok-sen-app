@@ -372,3 +372,14 @@ export function getAvailableTakeawaySlots(): TakeawaySlot[] {
 
   return slots;
 }
+
+export function calculateDeliveryFee(postalCode: string, subtotal: number = 0) {
+  const res = calculateDelivery(postalCode, subtotal);
+  return {
+    fee: res.deliveryFee,
+    distanceKm: res.distanceKm,
+    districtName: res.area || res.district,
+    zone: res.zone.name,
+    estimatedMinutes: res.estimatedMinutesRange[1],
+  };
+}
