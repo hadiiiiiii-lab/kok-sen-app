@@ -8,10 +8,11 @@ import {
   Image,
   TextInput,
 } from 'react-native';
-import { Search, Flame, Plus, Minus, QrCode, Sparkles } from 'lucide-react';
+import { Search, Flame, Plus, Minus, QrCode, Sparkles, ShoppingBag, ExternalLink } from 'lucide-react';
 import { DISHES, MENU_CATEGORIES } from '../data/dishes';
 import { MenuCategory, Dish } from '../types';
 import { playNativeSound, triggerHaptic } from '../utils/nativeSensors';
+import { openOrderWebLink } from '../utils/linkingHelper';
 
 interface MenuScreenProps {
   cart: { [dishId: number]: number };
@@ -90,6 +91,25 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({
             style={styles.searchInput}
           />
         </View>
+
+        {/* Oddle Order Web Link Shortcut */}
+        <TouchableOpacity
+          style={styles.oddleOrderBanner}
+          onPress={() => {
+            triggerHaptic('medium');
+            playNativeSound('pop');
+            openOrderWebLink();
+          }}
+          activeOpacity={0.85}
+        >
+          <View style={styles.oddleOrderBannerLeft}>
+            <ShoppingBag size={13} color="#C61E28" />
+            <Text style={styles.oddleOrderBannerText}>
+              Order Online: <Text style={styles.oddleLinkText}>koksen.oddle.me/en_SG</Text>
+            </Text>
+          </View>
+          <ExternalLink size={12} color="#C61E28" />
+        </TouchableOpacity>
       </View>
 
       {/* Horizontal Category Pill Bar */}
@@ -138,8 +158,10 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({
           const qty = cart[dish.id] || 0;
           return (
             <View key={dish.id} style={styles.dishCard}>
-              <Image source={{ uri: dish.image }} style={styles.dishImage} />
-              <View style={styles.dishDetails}>
+              {dish.image ? (
+                <Image source={{ uri: dish.image }} style={styles.dishImage} />
+              ) : null}
+              <View style={[styles.dishDetails, !dish.image && { paddingLeft: 12 }]}>
                 <View style={styles.dishBadgeRow}>
                   {dish.badge && <Text style={styles.dishBadge}>{dish.badge}</Text>}
                   {dish.isSpicy && (
@@ -150,7 +172,9 @@ export const MenuScreen: React.FC<MenuScreenProps> = ({
                   )}
                 </View>
                 <Text style={styles.dishName}>{dish.name}</Text>
-                <Text style={styles.dishChinese}>{dish.chineseName}</Text>
+                {dish.chineseName && !dish.name.includes(dish.chineseName) ? (
+                  <Text style={styles.dishChinese}>{dish.chineseName}</Text>
+                ) : null}
                 <Text style={styles.dishDesc} numberOfLines={2}>
                   {dish.description}
                 </Text>
@@ -271,6 +295,33 @@ const styles = StyleSheet.create({
     color: '#111827',
     marginLeft: 6,
     paddingVertical: 0,
+  },
+  oddleOrderBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginTop: 6,
+  },
+  oddleOrderBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  oddleOrderBannerText: {
+    fontSize: 10.5,
+    color: '#4B5563',
+    fontWeight: '600',
+  },
+  oddleLinkText: {
+    color: '#C61E28',
+    fontWeight: '800',
   },
   categoryScroll: {
     paddingHorizontal: 12,

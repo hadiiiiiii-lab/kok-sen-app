@@ -16,9 +16,12 @@ import {
   ArrowRight,
   ShieldCheck,
   Search,
+  ExternalLink,
+  MessageSquare,
 } from 'lucide-react';
 import { calculateDeliveryFee } from '../utils/deliveryEngine';
 import { playNativeSound, triggerHaptic } from '../utils/nativeSensors';
+import { openOrderWebLink, openWhatsApp } from '../utils/linkingHelper';
 
 interface DeliveryScreenProps {
   onOpenCart: () => void;
@@ -157,18 +160,66 @@ export const DeliveryScreen: React.FC<DeliveryScreenProps> = ({
           <Text style={styles.takeawayTitle}>Self-Pickup / Takeaway Counter</Text>
         </View>
         <Text style={styles.takeawayDesc}>
-          Pick up directly at 4 Keong Saik Road. Ready in 20-25 mins from ordering. 0% service charge or delivery fee.
+          Pick up directly at 4 Keong Saik Road (or City Square Mall). Ready in 20-25 mins from ordering. 0% service charge or delivery fee.
         </Text>
+
+        {/* Primary Order Action: Oddle Web Platform */}
+        <TouchableOpacity
+          style={styles.oddleLinkBtn}
+          onPress={() => {
+            triggerHaptic('medium');
+            playNativeSound('pop');
+            openOrderWebLink();
+          }}
+          activeOpacity={0.85}
+        >
+          <ShoppingBag size={15} color="#FFFFFF" />
+          <Text style={styles.oddleLinkBtnText}>Click to Order Online (Oddle Platform)</Text>
+          <ExternalLink size={14} color="#FFFFFF" />
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.orderTakeawayBtn}
           onPress={onOpenCart}
           activeOpacity={0.7}
         >
           <Text style={styles.orderTakeawayBtnText}>
-            Review Cart ({cartCount} item{cartCount === 1 ? '' : 's'})
+            Review In-App Cart ({cartCount} item{cartCount === 1 ? '' : 's'})
           </Text>
           <ArrowRight size={14} color="#FFFFFF" />
         </TouchableOpacity>
+
+        {/* Outlets WhatsApp Inquiries */}
+        <View style={styles.outletContactsBox}>
+          <Text style={styles.outletContactsTitle}>Takeaway & Delivery WhatsApp Concierge:</Text>
+          <View style={styles.outletContactBtns}>
+            <TouchableOpacity
+              style={styles.outletMiniWABtn}
+              onPress={() =>
+                openWhatsApp(
+                  '6597272533',
+                  'Hello Keong Saik Outlet (97272533), I have an inquiry regarding takeaway/delivery order.'
+                )
+              }
+            >
+              <MessageSquare size={12} color="#059669" />
+              <Text style={styles.outletMiniWAText}>1) Keong Saik: 97272533</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.outletMiniWABtn}
+              onPress={() =>
+                openWhatsApp(
+                  '6596244244',
+                  'Hello City Square Mall (96244244), I have an inquiry regarding takeaway/delivery order.'
+                )
+              }
+            >
+              <MessageSquare size={12} color="#059669" />
+              <Text style={styles.outletMiniWAText}>2) City Square: 96244244</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -405,14 +456,70 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#C61E28',
+    backgroundColor: '#374151',
     borderRadius: 10,
     paddingVertical: 10,
     gap: 6,
+    marginBottom: 10,
   },
   orderTakeawayBtnText: {
     color: '#FFFFFF',
     fontSize: 12,
+    fontWeight: '700',
+  },
+  oddleLinkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#C61E28',
+    borderRadius: 10,
+    paddingVertical: 12,
+    gap: 6,
+    marginBottom: 8,
+    shadowColor: '#C61E28',
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  oddleLinkBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12.5,
+    fontWeight: '800',
+  },
+  outletContactsBox: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 10,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  outletContactsTitle: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#374151',
+    marginBottom: 6,
+  },
+  outletContactBtns: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  outletMiniWABtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+  },
+  outletMiniWAText: {
+    color: '#065F46',
+    fontSize: 10,
     fontWeight: '700',
   },
 });

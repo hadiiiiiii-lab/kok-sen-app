@@ -8,11 +8,12 @@ import {
   TouchableOpacity,
   TextInput,
 } from 'react-native';
-import { X, Plus, Minus, Utensils, Bike, ShoppingBag, Clock, MapPin, CheckCircle2, MessageCircle } from 'lucide-react';
-import { DISHES, RESTAURANT_INFO } from '../data/dishes';
+import { X, Plus, Minus, Utensils, Bike, ShoppingBag, Clock, MapPin, CheckCircle2, MessageCircle, ExternalLink } from 'lucide-react';
+import { DISHES, RESTAURANT_INFO, ORDER_WEB_LINK } from '../data/dishes';
 import { DiningMode, DeliveryDetails, TakeawayDetails, Dish } from '../types';
 import { calculateDeliveryFee } from '../utils/deliveryEngine';
 import { playNativeSound, triggerHaptic } from '../utils/nativeSensors';
+import { openOrderWebLink } from '../utils/linkingHelper';
 
 interface CartModalProps {
   isOpen: boolean;
@@ -282,6 +283,21 @@ export const CartModal: React.FC<CartModalProps> = ({
           {/* Action Footer */}
           <View style={styles.footer}>
             <TouchableOpacity
+              style={styles.oddleOrderBtn}
+              onPress={() => {
+                triggerHaptic('medium');
+                playNativeSound('pop');
+                openOrderWebLink();
+              }}
+              activeOpacity={0.85}
+            >
+              <ExternalLink size={14} color="#C61E28" />
+              <Text style={styles.oddleOrderBtnText}>
+                Order via Official Web Link (Oddle Platform)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               style={[styles.placeOrderBtn, cartEntries.length === 0 && styles.placeOrderBtnDisabled]}
               onPress={handleCheckout}
               disabled={cartEntries.length === 0}
@@ -530,6 +546,24 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 16,
     paddingTop: 8,
+    gap: 8,
+  },
+  oddleOrderBtn: {
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  oddleOrderBtnText: {
+    color: '#9F1239',
+    fontSize: 12,
+    fontWeight: '800',
   },
   placeOrderBtn: {
     backgroundColor: '#C61E28',

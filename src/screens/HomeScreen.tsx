@@ -19,11 +19,16 @@ import {
   Award,
   Clock,
   Plus,
+  ExternalLink,
+  ShoppingBag,
+  MapPin,
+  Store,
 } from 'lucide-react';
-import { DISHES, RESTAURANT_INFO } from '../data/dishes';
+import { DISHES, RESTAURANT_INFO, OUTLETS, ORDER_WEB_LINK } from '../data/dishes';
 import { ActiveTab, Dish } from '../types';
 import { getSingaporeRestaurantStatus } from '../utils/singaporeTime';
 import { playNativeSound, triggerHaptic } from '../utils/nativeSensors';
+import { openWhatsApp, openOrderWebLink } from '../utils/linkingHelper';
 
 interface HomeScreenProps {
   onTabChange: (tab: ActiveTab) => void;
@@ -71,7 +76,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         <View style={styles.heroContent}>
           <View style={styles.michelinPill}>
             <Award size={12} color="#FBBF24" />
-            <Text style={styles.michelinText}>Michelin Bib Gourmand 2016-2024</Text>
+            <Text style={styles.michelinText}>Michelin Bib Gourmand 2016–2026</Text>
           </View>
           <Text style={styles.heroTitle}>Heritage Zi Char Since 1968</Text>
           <Text style={styles.heroSubtitle}>
@@ -82,13 +87,26 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               style={styles.heroButtonPrimary}
               onPress={() => {
                 triggerHaptic('medium');
+                playNativeSound('pop');
+                openOrderWebLink();
+              }}
+              activeOpacity={0.8}
+            >
+              <ShoppingBag size={14} color="#FFFFFF" />
+              <Text style={styles.heroButtonPrimaryText}>Order Online</Text>
+              <ExternalLink size={12} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.heroButtonSecondary}
+              onPress={() => {
+                triggerHaptic('light');
                 playNativeSound('tap');
                 onTabChange('menu');
               }}
               activeOpacity={0.8}
             >
-              <Text style={styles.heroButtonPrimaryText}>Order Dishes</Text>
-              <ArrowRight size={14} color="#FFFFFF" />
+              <Utensils size={14} color="#FFFFFF" />
+              <Text style={styles.heroButtonSecondaryText}>Menu</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.heroButtonSecondary}
@@ -100,7 +118,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               activeOpacity={0.8}
             >
               <QrCode size={14} color="#FFFFFF" />
-              <Text style={styles.heroButtonSecondaryText}>Scan Table</Text>
+              <Text style={styles.heroButtonSecondaryText}>Scan</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -169,6 +187,110 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </TouchableOpacity>
       </View>
 
+      {/* Official Online Ordering Card (Oddle Web Link) */}
+      <TouchableOpacity
+        style={styles.orderLinkCard}
+        onPress={() => {
+          triggerHaptic('medium');
+          playNativeSound('pop');
+          openOrderWebLink();
+        }}
+        activeOpacity={0.85}
+      >
+        <View style={styles.orderLinkLeft}>
+          <View style={styles.orderLinkIconWrap}>
+            <ShoppingBag size={18} color="#FFFFFF" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={styles.orderLinkHeaderRow}>
+              <Text style={styles.orderLinkTitle}>Official Online Ordering</Text>
+              <Text style={styles.orderLinkBadge}>ODDLE</Text>
+            </View>
+            <Text style={styles.orderLinkSub}>
+              Order islandwide delivery & takeaway on our official web link:
+            </Text>
+            <Text style={styles.orderLinkUrl}>koksen.oddle.me/en_SG</Text>
+          </View>
+        </View>
+        <ExternalLink size={18} color="#C61E28" />
+      </TouchableOpacity>
+
+      {/* Mainline WhatsApp Reservation Card (Dual Outlets) */}
+      <View style={styles.reservationOutletsCard}>
+        <View style={styles.reservationHeader}>
+          <View style={styles.reservationIconWrap}>
+            <MessageCircle size={16} color="#FFFFFF" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.reservationTitle}>Table Reservations via WhatsApp</Text>
+            <Text style={styles.reservationSub}>
+              Tap your outlet to link directly to our mainline WhatsApp:
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.outletButtonsRow}>
+          {/* 1) Keong Saik Outlet - 97272533 */}
+          <TouchableOpacity
+            style={styles.outletWABtn}
+            onPress={() => {
+              triggerHaptic('medium');
+              playNativeSound('tap');
+              openWhatsApp(
+                '6597272533',
+                'Hello Keong Saik Outlet (97272533), I would like to make a table reservation.'
+              );
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.outletNumberBadge}>
+              <Text style={styles.outletNumberText}>1</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.outletNameText}>Keong Saik Outlet</Text>
+              <Text style={styles.outletPhoneText}>WhatsApp: 97272533</Text>
+            </View>
+            <MessageCircle size={15} color="#059669" />
+          </TouchableOpacity>
+
+          {/* 2) City Square Mall Outlet - 96244244 */}
+          <TouchableOpacity
+            style={styles.outletWABtn}
+            onPress={() => {
+              triggerHaptic('medium');
+              playNativeSound('tap');
+              openWhatsApp(
+                '6596244244',
+                'Hello City Square Mall Outlet (96244244), I would like to make a table reservation.'
+              );
+            }}
+            activeOpacity={0.8}
+          >
+            <View style={styles.outletNumberBadge}>
+              <Text style={styles.outletNumberText}>2</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.outletNameText}>City Square Mall</Text>
+              <Text style={styles.outletPhoneText}>WhatsApp: 96244244</Text>
+            </View>
+            <MessageCircle size={15} color="#059669" />
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          style={styles.fullBookingPageBtn}
+          onPress={() => {
+            triggerHaptic('light');
+            onTabChange('bookings');
+          }}
+          activeOpacity={0.8}
+        >
+          <Calendar size={13} color="#C61E28" />
+          <Text style={styles.fullBookingPageBtnText}>Open Table Reservation Form</Text>
+          <ArrowRight size={13} color="#C61E28" />
+        </TouchableOpacity>
+      </View>
+
       {/* Islandwide Delivery Banner */}
       <TouchableOpacity
         style={styles.deliveryBanner}
@@ -205,8 +327,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       <View style={styles.dishList}>
         {signatureDishes.slice(0, 6).map((dish) => (
           <View key={dish.id} style={styles.dishCard}>
-            <Image source={{ uri: dish.image }} style={styles.dishImage} />
-            <View style={styles.dishInfo}>
+            {dish.image ? (
+              <Image source={{ uri: dish.image }} style={styles.dishImage} />
+            ) : null}
+            <View style={[styles.dishInfo, !dish.image && { paddingLeft: 12 }]}>
               <View style={styles.dishBadgeRow}>
                 {dish.badge && <Text style={styles.dishBadge}>{dish.badge}</Text>}
                 {dish.isSpicy && (
@@ -217,7 +341,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                 )}
               </View>
               <Text style={styles.dishName}>{dish.name}</Text>
-              <Text style={styles.dishChinese}>{dish.chineseName}</Text>
+              {dish.chineseName && !dish.name.includes(dish.chineseName) ? (
+                <Text style={styles.dishChinese}>{dish.chineseName}</Text>
+              ) : null}
               <Text style={styles.dishDesc} numberOfLines={2}>
                 {dish.description}
               </Text>
@@ -410,6 +536,147 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: '#374151',
+  },
+  orderLinkCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF1F2',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: '#FECDD3',
+  },
+  orderLinkLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    paddingRight: 8,
+  },
+  orderLinkIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#C61E28',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  orderLinkHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  orderLinkTitle: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#9F1239',
+  },
+  orderLinkBadge: {
+    fontSize: 8.5,
+    fontWeight: '900',
+    backgroundColor: '#E11D48',
+    color: '#FFFFFF',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+    letterSpacing: 0.5,
+  },
+  orderLinkSub: {
+    fontSize: 10,
+    color: '#4B5563',
+    marginTop: 1,
+  },
+  orderLinkUrl: {
+    fontSize: 10.5,
+    fontWeight: '700',
+    color: '#C61E28',
+    marginTop: 1,
+  },
+  reservationOutletsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  reservationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  reservationIconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#059669',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reservationTitle: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  reservationSub: {
+    fontSize: 10.5,
+    color: '#6B7280',
+    marginTop: 1,
+  },
+  outletButtonsRow: {
+    gap: 8,
+    marginBottom: 8,
+  },
+  outletWABtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.5,
+    borderColor: '#BBF7D0',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+  outletNumberBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#059669',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  outletNumberText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  outletNameText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#065F46',
+  },
+  outletPhoneText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#047857',
+  },
+  fullBookingPageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  fullBookingPageBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#C61E28',
   },
   deliveryBanner: {
     flexDirection: 'row',

@@ -1,12 +1,20 @@
 export type MenuCategory =
   | 'all'
-  | 'signatures'
-  | 'seafood'
-  | 'meat'
-  | 'noodles'
-  | 'vegetables'
-  | 'soups'
-  | 'drinks';
+  | 'SIGNATURE'
+  | 'SEAFOOD'
+  | 'PRAWN'
+  | 'FROGS'
+  | 'PORK'
+  | 'FISH'
+  | 'BEEF'
+  | 'CHICKEN'
+  | 'RICE'
+  | 'NOODLE'
+  | 'SOUP'
+  | 'TOFU'
+  | 'EGGS'
+  | 'VEGETABLE'
+  | string;
 
 export interface MenuSectionInfo {
   id: MenuCategory;
@@ -16,9 +24,24 @@ export interface MenuSectionInfo {
   description: string;
 }
 
+export interface OutletInfo {
+  id: string;
+  name: string;
+  chineseName: string;
+  phone: string;
+  phoneFormatted: string;
+  whatsappClean: string;
+  address: string;
+  mrt: string;
+  hours: string;
+  isMainline: boolean;
+}
+
 export interface Dish {
   id: number;
+  sourceItemId?: string;
   name: string;
+  englishName?: string;
   chineseName: string;
   price: number;
   image: string;

@@ -15,11 +15,14 @@ import {
   User,
   Phone,
   Info,
+  ExternalLink,
 } from 'lucide-react';
-import { DISHES, RESTAURANT_INFO } from '../data/dishes';
+import { DISHES, RESTAURANT_INFO, ORDER_WEB_LINK } from '../data/dishes';
 import { Dish, DiningMode, DeliveryDetails, TakeawayDetails } from '../types';
 import { formatSingaporeDate, formatSingaporeTime } from '../utils/singaporeTime';
 import { calculateDelivery, getAvailableTakeawaySlots } from '../utils/deliveryEngine';
+import { openOrderWebLink } from '../utils/linkingHelper';
+import { playNativeSound, triggerHaptic } from '../utils/nativeSensors';
 import { useAuth } from '../context/AuthContext';
 
 interface CartModalProps {
@@ -495,6 +498,19 @@ export const CartModal: React.FC<CartModalProps> = ({
               : diningMode === 'takeaway'
               ? 'Confirm Takeaway & Self-Pickup'
               : 'Confirm & Dispatch Delivery'}
+          </button>
+
+          {/* Official Oddle Web Ordering Link */}
+          <button
+            onClick={() => {
+              triggerHaptic('medium');
+              playNativeSound('pop');
+              openOrderWebLink();
+            }}
+            className="w-full py-2.5 px-4 rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 border border-red-200 bg-red-50 hover:bg-red-100 text-[#C61E28] transition-all cursor-pointer active:scale-98"
+          >
+            <ExternalLink className="w-4 h-4 text-[#C61E28]" />
+            Order on Official Oddle Web Platform (koksen.oddle.me)
           </button>
 
           {/* Send via WhatsApp */}

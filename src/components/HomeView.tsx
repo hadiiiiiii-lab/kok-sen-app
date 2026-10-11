@@ -15,11 +15,14 @@ import {
   Search,
   QrCode,
   Smartphone,
+  ShoppingBag,
+  ExternalLink,
 } from 'lucide-react';
-import { DISHES, RESTAURANT_INFO } from '../data/dishes';
+import { DISHES, RESTAURANT_INFO, OUTLETS, ORDER_WEB_LINK } from '../data/dishes';
 import { ActiveTab, Dish } from '../types';
 import { getSingaporeRestaurantStatus } from '../utils/singaporeTime';
 import { playNativeSound, triggerHaptic } from '../utils/nativeSensors';
+import { openWhatsApp, openOrderWebLink } from '../utils/linkingHelper';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface HomeViewProps {
@@ -100,7 +103,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <div className="relative z-10">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-amber-300 mb-3">
             <Award className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-            Singapore Michelin Bib Gourmand 2016–2024
+            Singapore Michelin Bib Gourmand 2016–2026
           </div>
 
           <h2 className="font-epilogue text-[23px] leading-snug font-extrabold tracking-tight">
@@ -115,22 +118,129 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
           <div className="mt-4 pt-3 border-t border-white/15 flex flex-wrap gap-2">
             <button
+              onClick={() => {
+                triggerHaptic('medium');
+                playNativeSound('pop');
+                openOrderWebLink();
+              }}
+              className="flex-1 bg-[#C61E28] hover:bg-red-700 text-white text-[13px] font-bold py-2.5 px-3.5 rounded-xl shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Order Online</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+            <button
               onClick={() => onTabChange('menu')}
-              className="flex-1 bg-[#C61E28] hover:bg-red-700 text-white text-[13px] font-bold py-2.5 px-4 rounded-xl shadow-md flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+              className="bg-white/15 hover:bg-white/25 text-white text-[13px] font-semibold py-2.5 px-3.5 rounded-xl border border-white/20 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
             >
               <Utensils className="w-4 h-4" />
-              Explore Menu
+              Menu
             </button>
-            <a
-              href={`https://wa.me/${RESTAURANT_INFO.whatsappClean}?text=Hi%20Kok%20Sen`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-white/10 hover:bg-white/20 text-white text-[13px] font-semibold py-2.5 px-3.5 rounded-xl border border-white/20 flex items-center justify-center gap-1.5 active:scale-95 transition-all"
+            <button
+              onClick={() => onTabChange('bookings')}
+              className="bg-white/10 hover:bg-white/20 text-white text-[13px] font-semibold py-2.5 px-3 rounded-xl border border-white/20 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
             >
-              <MessageCircle className="w-4 h-4 text-emerald-400" />
-              WhatsApp Us
-            </a>
+              <Calendar className="w-4 h-4 text-amber-300" />
+              Reserve
+            </button>
           </div>
+        </div>
+      </div>
+
+      {/* Official Oddle Online Ordering Banner */}
+      <div
+        onClick={() => {
+          triggerHaptic('medium');
+          playNativeSound('pop');
+          openOrderWebLink();
+        }}
+        className="p-3 bg-gradient-to-r from-red-50 to-amber-50 rounded-2xl border border-red-200/90 shadow-2xs flex items-center justify-between cursor-pointer hover:border-red-300 transition-all"
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-[#C61E28] text-white flex items-center justify-center shrink-0">
+            <ShoppingBag className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[12.5px] font-bold text-gray-900">Official Online Ordering</span>
+              <span className="text-[9px] font-extrabold uppercase bg-red-600 text-white px-1.5 py-0.2 rounded">
+                ODDLE
+              </span>
+            </div>
+            <div className="text-[11px] text-gray-600">Takeaway & islandwide delivery via web link</div>
+            <div className="text-[10.5px] font-bold text-[#C61E28]">koksen.oddle.me/en_SG</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 px-2.5 py-1.5 bg-[#C61E28] text-white rounded-lg text-xs font-bold shadow-xs">
+          <span>Order</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </div>
+      </div>
+
+      {/* Mainline WhatsApp Reservation Card (Dual Outlets) */}
+      <div className="bg-white rounded-2xl p-3.5 border border-gray-200 shadow-2xs space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <MessageCircle className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-[13px] font-bold text-gray-900">Table Reservations via WhatsApp</h3>
+              <p className="text-[10.5px] text-gray-500">Fast concierge confirmation on Singapore Time</p>
+            </div>
+          </div>
+          <button
+            onClick={() => onTabChange('bookings')}
+            className="text-[11px] font-bold text-[#C61E28] hover:underline"
+          >
+            Form
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          {/* 1) Keong Saik Outlet - 97272533 */}
+          <button
+            onClick={() =>
+              openWhatsApp(
+                '6597272533',
+                'Hello Keong Saik Outlet (97272533), I would like to reserve a table.'
+              )
+            }
+            className="p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/70 hover:bg-emerald-100/70 text-left transition-all cursor-pointer flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-600 text-white">
+                1) Keong Saik
+              </span>
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+            </div>
+            <div className="text-[11.5px] font-bold text-gray-900">4 Keong Saik Rd</div>
+            <div className="text-[11px] font-extrabold text-emerald-700 mt-0.5">
+              WhatsApp: 97272533
+            </div>
+          </button>
+
+          {/* 2) City Square Mall Outlet - 96244244 */}
+          <button
+            onClick={() =>
+              openWhatsApp(
+                '6596244244',
+                'Hello City Square Mall Outlet (96244244), I would like to reserve a table.'
+              )
+            }
+            className="p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/70 hover:bg-emerald-100/70 text-left transition-all cursor-pointer flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-600 text-white">
+                2) City Square
+              </span>
+              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+            </div>
+            <div className="text-[11.5px] font-bold text-gray-900">City Square Mall</div>
+            <div className="text-[11px] font-extrabold text-emerald-700 mt-0.5">
+              WhatsApp: 96244244
+            </div>
+          </button>
         </div>
       </div>
 
@@ -154,20 +264,20 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
         <button
           onClick={() => {
-            triggerHaptic('light');
-            playNativeSound('tap');
-            onTabChange('delivery');
+            triggerHaptic('medium');
+            playNativeSound('pop');
+            openOrderWebLink();
           }}
           className="flex flex-col items-center justify-center p-3 rounded-xl bg-white border border-[#C61E28]/30 shadow-xs hover:border-[#C61E28] active:scale-95 transition-all cursor-pointer relative"
         >
-          <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-1.5">
-            <Bike className="w-5 h-5 stroke-[2.2]" />
+          <div className="w-10 h-10 rounded-full bg-red-50 text-[#C61E28] flex items-center justify-center mb-1.5">
+            <ShoppingBag className="w-5 h-5 stroke-[2.2]" />
           </div>
           <span className="text-[11px] font-bold text-gray-800 text-center leading-tight">
-            Delivery
+            Order Web
           </span>
           <span className="absolute -top-1 -right-1 bg-[#C61E28] text-white text-[9px] font-bold px-1 rounded-full shadow-xs">
-            Hub
+            Oddle
           </span>
         </button>
 
@@ -187,11 +297,15 @@ export const HomeView: React.FC<HomeViewProps> = ({
           </span>
         </button>
 
-        <a
-          href={`https://wa.me/${RESTAURANT_INFO.whatsappClean}?text=Hi%20Kok%20Sen,%20I%20would%20like%20to%20inquire%20about%20takeaway%20ordering.`}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => triggerHaptic('light')}
+        <button
+          onClick={() => {
+            triggerHaptic('medium');
+            playNativeSound('tap');
+            openWhatsApp(
+              '6597272533',
+              'Hello Kok Sen Restaurant, I would like to inquire about reservation.'
+            );
+          }}
           className="flex flex-col items-center justify-center p-3 rounded-xl bg-white border border-gray-200/80 shadow-xs hover:border-[#C61E28]/40 active:scale-95 transition-all cursor-pointer"
         >
           <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mb-1.5">
@@ -200,7 +314,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <span className="text-[11px] font-bold text-gray-800 text-center leading-tight">
             WhatsApp
           </span>
-        </a>
+        </button>
       </div>
 
       {/* Mobile Native Experience Strip: Table QR, React Native Core & Deploy to Phone */}
@@ -412,19 +526,31 @@ export const HomeView: React.FC<HomeViewProps> = ({
               key={dish.id}
               className="w-[240px] shrink-0 bg-white rounded-xl border border-gray-200/80 overflow-hidden shadow-xs flex flex-col justify-between hover:border-[#C61E28]/30 transition-all"
             >
-              <div className="h-32 w-full relative bg-gray-100">
-                <img
-                  src={dish.image}
-                  alt={dish.name}
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-                {dish.badge && (
-                  <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-xs text-[#C61E28] font-bold text-[10px] px-2 py-0.5 rounded border border-[#C61E28]/30 uppercase">
-                    {dish.badge}
-                  </span>
-                )}
-              </div>
+              {dish.image ? (
+                <div className="h-32 w-full relative bg-gray-100">
+                  <img
+                    src={dish.image}
+                    alt={dish.name}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                    loading="lazy"
+                  />
+                  {dish.badge && (
+                    <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-xs text-[#C61E28] font-bold text-[10px] px-2 py-0.5 rounded border border-[#C61E28]/30 uppercase">
+                      {dish.badge}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="p-3 bg-red-50/40 border-b border-gray-100 flex items-center justify-between">
+                  {dish.badge && (
+                    <span className="bg-white text-[#C61E28] font-bold text-[10px] px-2 py-0.5 rounded border border-[#C61E28]/30 uppercase">
+                      {dish.badge}
+                    </span>
+                  )}
+                  <span className="text-[11px] font-bold text-[#C61E28]">{dish.category}</span>
+                </div>
+              )}
               <div className="p-3">
                 <div className="flex justify-between items-baseline">
                   <h4 className="font-bold text-[15px] text-gray-900 leading-tight">
@@ -434,7 +560,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
                     S${dish.price.toFixed(2)}
                   </span>
                 </div>
-                <span className="text-[12px] text-gray-500 block">{dish.chineseName}</span>
+                {dish.chineseName && !dish.name.includes(dish.chineseName) && (
+                  <span className="text-[12px] text-gray-500 block mt-0.5">{dish.chineseName}</span>
+                )}
                 <p className="text-[12px] text-gray-600 mt-1 line-clamp-2 leading-relaxed">
                   {dish.description}
                 </p>

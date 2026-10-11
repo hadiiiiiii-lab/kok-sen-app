@@ -59,36 +59,66 @@ export const DishDetailModal: React.FC<DishDetailModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header with Close Button */}
-        <div className="relative h-48 w-full bg-gray-100 shrink-0">
-          <img
-            src={dish.image}
-            alt={dish.name}
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors cursor-pointer"
-            aria-label="Close details"
-          >
-            <X className="w-4 h-4" />
-          </button>
-          {dish.badge && (
-            <span className="absolute top-3 left-3 bg-[#C61E28] text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              {dish.badge}
-            </span>
-          )}
-          <div className="absolute bottom-3 left-4 right-4 text-white">
-            <h3 className="font-epilogue text-[20px] font-bold leading-tight drop-shadow-sm">
-              {dish.name}
-            </h3>
-            <span className="text-[13px] text-gray-200 font-medium drop-shadow-sm">
-              {dish.chineseName}
-            </span>
+        {dish.image ? (
+          <div className="relative h-48 w-full bg-gray-100 shrink-0">
+            <img
+              src={dish.image}
+              alt={dish.name}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <button
+              onClick={onClose}
+              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors cursor-pointer"
+              aria-label="Close details"
+            >
+              <X className="w-4 h-4" />
+            </button>
+            {dish.badge && (
+              <span className="absolute top-3 left-3 bg-[#C61E28] text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider shadow-sm flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                {dish.badge}
+              </span>
+            )}
+            <div className="absolute bottom-3 left-4 right-4 text-white">
+              <h3 className="font-epilogue text-[20px] font-bold leading-tight drop-shadow-sm">
+                {dish.name}
+              </h3>
+              {dish.chineseName && !dish.name.includes(dish.chineseName) && (
+                <span className="text-[13px] text-gray-200 font-medium drop-shadow-sm">
+                  {dish.chineseName}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="p-4 pb-3 border-b border-gray-100 bg-stone-50 flex items-start justify-between gap-3 shrink-0">
+            <div>
+              {dish.badge && (
+                <span className="inline-flex items-center gap-1 bg-[#C61E28] text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider mb-1.5 shadow-2xs">
+                  <Sparkles className="w-3 h-3" />
+                  {dish.badge}
+                </span>
+              )}
+              <h3 className="font-epilogue text-[18px] font-bold text-gray-900 leading-tight">
+                {dish.name}
+              </h3>
+              {dish.chineseName && !dish.name.includes(dish.chineseName) && (
+                <span className="text-[13px] text-gray-500 font-medium block mt-0.5">
+                  {dish.chineseName}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              aria-label="Close details"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Modal Scrollable Body */}
         <div className="p-4 overflow-y-auto space-y-4 flex-1">

@@ -14,10 +14,14 @@ import {
   Coffee,
   Check,
   ShieldAlert,
+  ShoppingBag,
+  ExternalLink,
 } from 'lucide-react';
-import { DISHES, MENU_SECTIONS, RESTAURANT_INFO } from '../data/dishes';
+import { DISHES, MENU_SECTIONS, RESTAURANT_INFO, ORDER_WEB_LINK } from '../data/dishes';
 import { Dish, MenuCategory } from '../types';
 import { DishDetailModal } from './DishDetailModal';
+import { openOrderWebLink } from '../utils/linkingHelper';
+import { playNativeSound, triggerHaptic } from '../utils/nativeSensors';
 
 interface MenuViewProps {
   cart: { [dishId: number]: number };
@@ -28,12 +32,12 @@ interface MenuViewProps {
 }
 
 const POPULAR_SEARCH_CHIPS = [
-  'Big Prawn',
+  'Big Prawns',
   'Yong Tau Foo',
   'Har Cheong Gai',
   'Hor Fun',
-  'Pork Ribs',
-  'Barley',
+  'Sweet & Sour Pork',
+  'Bittergourd Soup',
 ];
 
 export const MenuView: React.FC<MenuViewProps> = ({
@@ -57,7 +61,8 @@ export const MenuView: React.FC<MenuViewProps> = ({
     return DISHES.filter(
       (dish) =>
         dish.name.toLowerCase().includes(q) ||
-        dish.chineseName.toLowerCase().includes(q) ||
+        (dish.chineseName && dish.chineseName.toLowerCase().includes(q)) ||
+        (dish.englishName && dish.englishName.toLowerCase().includes(q)) ||
         dish.description.toLowerCase().includes(q) ||
         (dish.badge && dish.badge.toLowerCase().includes(q)) ||
         (dish.allergens && dish.allergens.some((a) => a.toLowerCase().includes(q)))
@@ -71,7 +76,8 @@ export const MenuView: React.FC<MenuViewProps> = ({
       const matchesSearch =
         !q ||
         dish.name.toLowerCase().includes(q) ||
-        dish.chineseName.toLowerCase().includes(q) ||
+        (dish.chineseName && dish.chineseName.toLowerCase().includes(q)) ||
+        (dish.englishName && dish.englishName.toLowerCase().includes(q)) ||
         dish.description.toLowerCase().includes(q) ||
         (dish.badge && dish.badge.toLowerCase().includes(q)) ||
         (dish.allergens && dish.allergens.some((a) => a.toLowerCase().includes(q)));
@@ -104,7 +110,7 @@ export const MenuView: React.FC<MenuViewProps> = ({
       const dishes = filteredDishes.filter(
         (dish) =>
           dish.category === section.id ||
-          (section.id !== 'signatures' && dish.secondaryCategory === section.id)
+          (section.id !== 'SIGNATURE' && dish.secondaryCategory === section.id)
       );
       return { ...section, dishes };
     }).filter((section) => section.dishes.length > 0);
@@ -120,20 +126,34 @@ export const MenuView: React.FC<MenuViewProps> = ({
 
   const getSectionIcon = (id: MenuCategory) => {
     switch (id) {
-      case 'signatures':
+      case 'SIGNATURE':
         return <Sparkles className="w-4 h-4 text-amber-500" />;
-      case 'seafood':
+      case 'SEAFOOD':
         return <Fish className="w-4 h-4 text-blue-500" />;
-      case 'meat':
+      case 'PRAWN':
+        return <Fish className="w-4 h-4 text-orange-500" />;
+      case 'FROGS':
+        return <Flame className="w-4 h-4 text-emerald-600" />;
+      case 'PORK':
         return <Flame className="w-4 h-4 text-rose-500" />;
-      case 'noodles':
+      case 'FISH':
+        return <Fish className="w-4 h-4 text-cyan-600" />;
+      case 'BEEF':
+        return <Flame className="w-4 h-4 text-red-600" />;
+      case 'CHICKEN':
+        return <Flame className="w-4 h-4 text-amber-600" />;
+      case 'RICE':
+        return <UtensilsCrossed className="w-4 h-4 text-yellow-600" />;
+      case 'NOODLE':
         return <UtensilsCrossed className="w-4 h-4 text-amber-600" />;
-      case 'vegetables':
-        return <Salad className="w-4 h-4 text-emerald-500" />;
-      case 'soups':
+      case 'SOUP':
         return <Soup className="w-4 h-4 text-orange-500" />;
-      case 'drinks':
-        return <Coffee className="w-4 h-4 text-teal-600" />;
+      case 'TOFU':
+        return <Sparkles className="w-4 h-4 text-amber-600" />;
+      case 'EGGS':
+        return <Sparkles className="w-4 h-4 text-yellow-500" />;
+      case 'VEGETABLE':
+        return <Salad className="w-4 h-4 text-emerald-500" />;
       default:
         return <UtensilsCrossed className="w-4 h-4 text-gray-500" />;
     }
@@ -204,6 +224,34 @@ export const MenuView: React.FC<MenuViewProps> = ({
             ))}
           </div>
         )}
+
+        {/* Oddle Online Order Web Link Banner */}
+        <div
+          onClick={() => {
+            triggerHaptic('medium');
+            playNativeSound('pop');
+            openOrderWebLink();
+          }}
+          className="p-2.5 bg-gradient-to-r from-red-50 to-amber-50 rounded-xl border border-red-200/90 flex items-center justify-between cursor-pointer hover:border-red-300 transition-all shadow-2xs"
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-[#C61E28] text-white flex items-center justify-center shrink-0">
+              <ShoppingBag className="w-3.5 h-3.5" />
+            </div>
+            <div>
+              <span className="text-[12px] font-bold text-gray-900 block leading-tight">
+                Order via Official Web Link (Oddle Platform)
+              </span>
+              <span className="text-[10.5px] font-semibold text-[#C61E28]">
+                koksen.oddle.me/en_SG
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] font-bold text-[#C61E28] bg-white px-2 py-1 rounded-lg border border-red-200 shadow-2xs">
+            <span>Order</span>
+            <ExternalLink className="w-3 h-3" />
+          </div>
+        </div>
 
         {/* Category cross-match notice: if 0 items in current category but available in other categories */}
         {searchQuery.trim() &&
@@ -426,20 +474,29 @@ export const MenuView: React.FC<MenuViewProps> = ({
                       className="bg-white rounded-xl p-3 border border-gray-200/90 shadow-xs hover:border-[#C61E28]/40 transition-colors flex gap-3 relative cursor-pointer"
                       onClick={() => setSelectedDishForModal(dish)}
                     >
-                      {/* Dish Photo */}
-                      <div className="w-[88px] h-[88px] shrink-0 relative rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                        <img
-                          src={dish.image}
-                          alt={dish.name}
-                          className="w-full h-full object-cover"
-                          referrerPolicy="no-referrer"
-                        />
-                        {dish.badge && (
-                          <span className="absolute top-1 left-1 bg-white/95 text-[#C61E28] text-[9px] px-1.5 py-0.5 rounded border border-[#C61E28]/20 uppercase tracking-wider font-bold shadow-xs">
+                      {/* Dish Photo - only rendered if dish has an original photo */}
+                      {dish.image ? (
+                        <div className="w-[88px] h-[88px] shrink-0 relative rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                          <img
+                            src={dish.image}
+                            alt={dish.name}
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                          />
+                          {dish.badge && (
+                            <span className="absolute top-1 left-1 bg-white/95 text-[#C61E28] text-[9px] px-1.5 py-0.5 rounded border border-[#C61E28]/20 uppercase tracking-wider font-bold shadow-xs">
+                              {dish.badge}
+                            </span>
+                          )}
+                        </div>
+                      ) : dish.badge ? (
+                        <div className="shrink-0 pt-0.5 self-start">
+                          <span className="bg-red-50 text-[#C61E28] text-[9.5px] px-2 py-0.5 rounded border border-[#C61E28]/20 uppercase tracking-wider font-bold">
                             {dish.badge}
                           </span>
-                        )}
-                      </div>
+                        </div>
+                      ) : null}
 
                       {/* Dish Content */}
                       <div className="flex-1 flex flex-col justify-between">
@@ -449,9 +506,11 @@ export const MenuView: React.FC<MenuViewProps> = ({
                               <h4 className="font-epilogue text-[14.5px] text-gray-900 font-bold leading-tight">
                                 {dish.name}
                               </h4>
-                              <span className="text-[12px] text-gray-500 font-medium">
-                                {dish.chineseName}
-                              </span>
+                              {dish.chineseName && !dish.name.includes(dish.chineseName) && (
+                                <span className="text-[12px] text-gray-500 font-medium block mt-0.5">
+                                  {dish.chineseName}
+                                </span>
+                              )}
                             </div>
                             <span className="font-epilogue text-[15px] text-[#C61E28] font-extrabold whitespace-nowrap ml-2">
                               S${dish.price.toFixed(2)}
